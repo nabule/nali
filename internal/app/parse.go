@@ -1,8 +1,13 @@
 package app
 
 import (
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"path/filepath"
+
+	"encoding/json"
 
 	"github.com/zu1k/nali/constant"
 	"github.com/zu1k/nali/internal/ipdb"
@@ -55,7 +60,7 @@ func ParseIPs(ips []string) {
 				fmt.Println(formatResult(ip, result))
 			}
 		default:
-			fmt.Println(ReplaceIPInString(ip))
+			fmt.Println(ReplaceIPInString(ReplacePhoneInString(ip)))
 		}
 	}
 }
@@ -100,6 +105,58 @@ func ReplaceIPInString(str string) (result string) {
 		info := db1.Find(ip)
 		result = tools.AddInfoIp6(result, ip, info)
 	}
+	return
+}
+
+func ReplacePhoneInString(str string) (result string) {
+	// db0 := db[0]
+	// var db1 ipdbk.IPDB
+	// if len(db) > 1 {
+	// 	db1 = db[1]
+	// } else {
+	// 	db1 = db[0]
+	// }
+	appkey := "京东万象的appkey"
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, //忽略对服务器的认证
+			},
+		},
+	}
+
+	result = str
+	phones := tools.GetPhoneFromString(str)
+	phones = RemoveRepeatedElement(phones)
+	for _, phone := range phones {
+		resp, err := client.Get("https://way.jd.com/jisuapi/query4?shouji=" + phone + "&appkey=" + appkey)
+		if err != nil {
+			fmt.Println("Request failed:", err)
+			return
+		}
+		htmlData, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Respose failed:", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		htmlbodymap := make(map[string]interface{})
+		err = json.Unmarshal([]byte(htmlData), &htmlbodymap)
+		if err != nil {
+			fmt.Println("Umarshal failed:", err)
+			return
+		}
+
+		PhoneInfoResult := htmlbodymap["result"].(map[string]interface{})["result"]
+		PhoneInfoResultMap := PhoneInfoResult.(map[string]interface{})
+
+		info := PhoneInfoResultMap["province"].(string) + PhoneInfoResultMap["city"].(string) + PhoneInfoResultMap["company"].(string)
+		// fmt.Printf("%T", PhoneInfoResultMap["city"])
+		result = tools.AddInfoPhone(result, phone, info)
+	}
+
 	return
 }
 

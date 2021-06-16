@@ -1,13 +1,20 @@
 package tools
 
 import (
-	"strings"
 	"regexp"
+	"strings"
 )
 
 func AddInfoIp4(origin string, ip string, info string) (result string) {
 	re := regexp.MustCompile("(^|[^0-9.])(" + strings.ReplaceAll(ip, ".", "\\.") + ")($|[^0-9.])")
 	result = re.ReplaceAllString(origin, "$1$2"+" ["+info+"]$3")
+	return strings.TrimRight(result, " \t")
+}
+
+func AddInfoPhone(origin string, phone string, info string) (result string) {
+	pattern := phone
+	re := regexp.MustCompile(pattern)
+	result = re.ReplaceAllString(origin, "$0"+" ["+info+"]")
 	return strings.TrimRight(result, " \t")
 }
 
