@@ -1,14 +1,10 @@
 package app
 
 import (
-	"crypto/tls"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"path/filepath"
 
-	"encoding/json"
-
+	"github.com/xluohome/phonedata"
 	"github.com/zu1k/nali/constant"
 	"github.com/zu1k/nali/internal/ipdb"
 	"github.com/zu1k/nali/internal/tools"
@@ -116,43 +112,48 @@ func ReplacePhoneInString(str string) (result string) {
 	// } else {
 	// 	db1 = db[0]
 	// }
-	appkey := "京东万象的appkey"
+	// appkey := "京东万象接口"
 
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true, //忽略对服务器的认证
-			},
-		},
-	}
+	// client := &http.Client{
+	// 	Transport: &http.Transport{
+	// 		TLSClientConfig: &tls.Config{
+	// 			InsecureSkipVerify: true, //忽略对服务器的认证
+	// 		},
+	// 	},
+	// }
 
 	result = str
 	phones := tools.GetPhoneFromString(str)
 	phones = RemoveRepeatedElement(phones)
 	for _, phone := range phones {
-		resp, err := client.Get("https://way.jd.com/jisuapi/query4?shouji=" + phone + "&appkey=" + appkey)
+		pr, err := phonedata.Find(phone)
 		if err != nil {
-			fmt.Println("Request failed:", err)
-			return
+			panic(err)
 		}
-		htmlData, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Respose failed:", err)
-			return
-		}
-		defer resp.Body.Close()
+		// resp, err := client.Get("https://way.jd.com/jisuapi/query4?shouji=" + phone + "&appkey=" + appkey)
+		// if err != nil {
+		// 	fmt.Println("Request failed:", err)
+		// 	return
+		// }
+		// htmlData, err := ioutil.ReadAll(resp.Body)
+		// if err != nil {
+		// 	fmt.Println("Respose failed:", err)
+		// 	return
+		// }
+		// defer resp.Body.Close()
 
-		htmlbodymap := make(map[string]interface{})
-		err = json.Unmarshal([]byte(htmlData), &htmlbodymap)
-		if err != nil {
-			fmt.Println("Umarshal failed:", err)
-			return
-		}
+		// htmlbodymap := make(map[string]interface{})
+		// err = json.Unmarshal([]byte(htmlData), &htmlbodymap)
+		// if err != nil {
+		// 	fmt.Println("Umarshal failed:", err)
+		// 	return
+		// }
 
-		PhoneInfoResult := htmlbodymap["result"].(map[string]interface{})["result"]
-		PhoneInfoResultMap := PhoneInfoResult.(map[string]interface{})
+		// PhoneInfoResult := htmlbodymap["result"].(map[string]interface{})["result"]
+		// PhoneInfoResultMap := PhoneInfoResult.(map[string]interface{})
 
-		info := PhoneInfoResultMap["province"].(string) + PhoneInfoResultMap["city"].(string) + PhoneInfoResultMap["company"].(string)
+		// info := PhoneInfoResultMap["province"].(string) + PhoneInfoResultMap["city"].(string) + PhoneInfoResultMap["company"].(string)
+		info := pr.Province + pr.City + pr.CardType
 		// fmt.Printf("%T", PhoneInfoResultMap["city"])
 		result = tools.AddInfoPhone(result, phone, info)
 	}

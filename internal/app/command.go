@@ -28,8 +28,6 @@ func Root(args []string) {
 			if line == "quit" || line == "exit" {
 				return
 			}
-			// fmt.Printf("%s\n", ReplaceIPInString(ReplaceCDNInString(line)))
-			// fmt.Printf("%s\n", (ReplacePhoneInString(line)))
 			fmt.Printf("%s\n", ReplaceIPInString(ReplaceCDNInString(ReplacePhoneInString(line))))
 		}
 	} else {
