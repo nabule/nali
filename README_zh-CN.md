@@ -295,6 +295,10 @@ or
 export NALI_DB_HOME=/home/nali
 ```
 
+### 增加离线查询手机号归属地功能
+
+引用https://github.com/xluohome/phonedata
+手机号归属地离线文件需放置于`~/.nali`
 ## 感谢列表
 
 - [纯真QQIP离线数据库](http://www.cz88.net/fox/ipdat.shtml)
